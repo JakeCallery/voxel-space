@@ -1,5 +1,5 @@
 export interface Camera  {
-    x: Number,
-    y: Number,
-    zFar: Number
+    x: number,
+    y: number,
+    zFar: number
 }
