@@ -4,5 +4,8 @@ export interface KeyState {
     arrowLeft: boolean,
     arrowRight: boolean,
     elevationUp: boolean,
-    elevationDown: boolean
+    elevationDown: boolean,
+    rotateLeft: boolean,
+    rotateRight: boolean,
+
 }

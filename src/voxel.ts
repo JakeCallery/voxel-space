@@ -32,11 +32,15 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         pry: 0
     }
 
-    const keyState = <KeyState> {
+    const keyState = <KeyState>{
         arrowUp: false,
         arrowDown: false,
         arrowLeft: false,
-        arrowRight: false
+        arrowRight: false,
+        elevationDown: false,
+        elevationUp: false,
+        rotateLeft: false,
+        rotateRight: false
     }
 
     let isRunning = true;
@@ -45,7 +49,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         x: 500,
         y: 512,
         altitude: 150,
-        zFar: 400
+        zFar: 359,
+        angle: 0
     }
 
     colorMap.onload = (evt) => {
@@ -54,7 +59,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         canvas.height = colorMap.naturalHeight;
         let context = canvas.getContext('2d');
         context!.drawImage(colorMap, 0, 0);
-        colorMapData = context!.getImageData(0,0, canvas.width, canvas.height).data;
+        colorMapData = context!.getImageData(0, 0, canvas.width, canvas.height).data;
         init(evt);
     }
 
@@ -64,7 +69,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         canvas.height = heightMap.naturalHeight;
         let context = canvas.getContext('2d');
         context!.drawImage(heightMap, 0, 0);
-        heightMapData = context!.getImageData(0,0, canvas.width, canvas.height).data;
+        heightMapData = context!.getImageData(0, 0, canvas.width, canvas.height).data;
         init(evt);
     }
 
@@ -74,7 +79,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         //Register keyboard events
         window.addEventListener("keydown", (event) => {
             switch (event.key) {
-               case "ArrowUp":
+                case "ArrowUp":
                     keyState.arrowUp = true;
                     break;
                 case "ArrowDown":
@@ -92,31 +97,42 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 case "s":
                     keyState.elevationDown = true;
                     break;
+                case "a":
+                    keyState.rotateLeft = true;
+                    break;
+                case "d":
+                    keyState.rotateRight = true;
+                    break;
             }
         });
 
         window.addEventListener("keyup", (event) => {
-          switch (event.key) {
-              case "ArrowUp":
-                  keyState.arrowUp = false;
-                  break;
-              case "ArrowDown":
-                  keyState.arrowDown = false;
-                  break;
-              case "ArrowLeft":
-                  keyState.arrowLeft = false;
-                  break;
-              case "ArrowRight":
-                  keyState.arrowRight = false;
-                  break;
-              case "w":
-                  keyState.elevationUp = false;
-                  break;
-              case "s":
-                  keyState.elevationDown = false;
-                  break;
-
-          }
+            switch (event.key) {
+                case "ArrowUp":
+                    keyState.arrowUp = false;
+                    break;
+                case "ArrowDown":
+                    keyState.arrowDown = false;
+                    break;
+                case "ArrowLeft":
+                    keyState.arrowLeft = false;
+                    break;
+                case "ArrowRight":
+                    keyState.arrowRight = false;
+                    break;
+                case "w":
+                    keyState.elevationUp = false;
+                    break;
+                case "s":
+                    keyState.elevationDown = false;
+                    break;
+                case "a":
+                    keyState.rotateLeft = false;
+                    break;
+                case "d":
+                    keyState.rotateRight = false;
+                    break;
+            }
         });
 
         //Start the game loop
@@ -137,38 +153,52 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     const processInputs = () => {
 
-        if(keyState.arrowUp) {
-            camera.y--;
+        if (keyState.arrowUp) {
+            console.log(camera.angle);
+            camera.x += Math.cos(camera.angle);
+            camera.y -= Math.sin(camera.angle);
         }
 
-        if(keyState.arrowDown) {
-            camera.y++;
+        if (keyState.arrowDown) {
+            camera.x -= Math.cos(camera.angle);
+            camera.y += Math.sin(camera.angle);
         }
 
-        if(keyState.arrowLeft) {
-            camera.x--
-        }
+        // if (keyState.arrowLeft) {
+        //     camera.x--;
+        // }
+        //
+        // if (keyState.arrowRight) {
+        //     camera.x++;
+        // }
 
-        if(keyState.arrowRight) {
-            camera.x++;
-        }
-
-        if(keyState.elevationUp) {
+        if (keyState.elevationUp) {
             camera.altitude++;
         }
 
-        if(keyState.elevationDown) {
+        if (keyState.elevationDown) {
             camera.altitude--;
+        }
+        if (keyState.rotateLeft) {
+            camera.angle -= 0.01;
+        }
+        if (keyState.rotateRight) {
+            camera.angle += 0.01;
         }
 
     }
 
     const updateStates = (camera: Camera, ds: DrawState) => {
+
+        let sinAngle = Math.sin(camera.angle);
+        let cosAngle = Math.cos(camera.angle);
+
         //Draw State update
-        ds.plx = -camera.zFar;
-        ds.ply = camera.zFar;
-        ds.prx = camera.zFar
-        ds.pry = camera.zFar;
+        ds.plx = cosAngle * camera.zFar + sinAngle * camera.zFar;
+        ds.ply = sinAngle * camera.zFar - cosAngle * camera.zFar;
+
+        ds.prx = cosAngle * camera.zFar - sinAngle * camera.zFar;
+        ds.pry = sinAngle * camera.zFar + cosAngle * camera.zFar
 
     }
 
@@ -195,20 +225,20 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 ry -= dy;
 
                 //Find the offset that we can use to fetch color and height data from
-                let mapOffset = ((colorMap.width * Math.floor(ry & (colorMap.height-1))) + Math.floor(rx & (colorMap.width-1))) * 4;
+                let mapOffset = ((colorMap.width * Math.floor(ry & (colorMap.height - 1))) + Math.floor(rx & (colorMap.width - 1))) * 4;
 
                 let heightOnScreen = Math.floor((camera.altitude - heightMapData[mapOffset]) / z * scalingFactor);
 
-                if(heightOnScreen < 0) {
+                if (heightOnScreen < 0) {
                     heightOnScreen = 0;
                 }
 
-                if(heightOnScreen > canvasHeight) {
-                    heightOnScreen = canvasHeight -1;
+                if (heightOnScreen > canvasHeight) {
+                    heightOnScreen = canvasHeight - 1;
                 }
 
-                if(heightOnScreen < maxHeightOnScreen) {
-                    for(let y = heightOnScreen; y < maxHeightOnScreen; y++) {
+                if (heightOnScreen < maxHeightOnScreen) {
+                    for (let y = heightOnScreen; y < maxHeightOnScreen; y++) {
                         let index = ((canvasWidth * y) + i) * 4;
 
                         data[index] = colorMapData[mapOffset];
@@ -230,7 +260,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     }
 
     const clearImageData = (data: Uint8ClampedArray) => {
-        for(let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
             data[i] = 0;
         }
     }
