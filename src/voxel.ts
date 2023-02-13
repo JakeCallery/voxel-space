@@ -85,6 +85,13 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                     break;
                 case "ArrowRight":
                     keyState.arrowRight = true;
+                    break;
+                case "w":
+                    keyState.elevationUp = true;
+                    break;
+                case "s":
+                    keyState.elevationDown = true;
+                    break;
             }
         });
 
@@ -101,6 +108,14 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                   break;
               case "ArrowRight":
                   keyState.arrowRight = false;
+                  break;
+              case "w":
+                  keyState.elevationUp = false;
+                  break;
+              case "s":
+                  keyState.elevationDown = false;
+                  break;
+
           }
         });
 
@@ -136,6 +151,14 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
         if(keyState.arrowRight) {
             camera.x++;
+        }
+
+        if(keyState.elevationUp) {
+            camera.altitude++;
+        }
+
+        if(keyState.elevationDown) {
+            camera.altitude--;
         }
 
     }
