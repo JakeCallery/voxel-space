@@ -73,7 +73,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
         //Register keyboard events
         window.addEventListener("keydown", (event) => {
-            console.log("Key: ", event.key);
             switch (event.key) {
                case "ArrowUp":
                     keyState.arrowUp = true;
