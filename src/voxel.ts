@@ -152,6 +152,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     const drawScreen = (camera: Camera, ds: DrawState) => {
 
+        clearImageData(data);
+
         let xSegment = (ds.prx - ds.plx) / canvasWidth;
         let ySegment = (ds.pry - ds.ply) / canvasWidth;
 
@@ -200,8 +202,15 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             }
         }
 
+
         ctx.putImageData(imageData, 0, 0);
 
+    }
+
+    const clearImageData = (data: Uint8ClampedArray) => {
+        for(let i = 0; i < data.length; i++) {
+            data[i] = 0;
+        }
     }
 
     const init = (e: Event) => {
