@@ -4,4 +4,5 @@ export interface Camera  {
     altitude: number,
     zFar: number,
     angle: number, //Radians, clockwise
+    horizon: number, //offset to pitch up and down
 }

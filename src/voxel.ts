@@ -50,7 +50,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         y: 512,
         altitude: 150,
         zFar: 359,
-        angle: 1.5 * Math.PI
+        angle: 1.5 * Math.PI,
+        horizon: 100
     }
 
     colorMap.onload = (evt) => {
@@ -103,6 +104,13 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 case "d":
                     keyState.rotateRight = true;
                     break;
+                case "r":
+                    keyState.tiltDown = true;
+                    break;
+                case "f":
+                    keyState.tiltUp = true;
+                    break;
+
             }
         });
 
@@ -131,6 +139,12 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                     break;
                 case "d":
                     keyState.rotateRight = false;
+                    break;
+                case "r":
+                    keyState.tiltDown = false;
+                    break;
+                case "f":
+                    keyState.tiltUp = false;
                     break;
             }
         });
@@ -188,6 +202,14 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.angle += 0.01;
         }
 
+        if(keyState.tiltUp) {
+            camera.horizon += 1.5;
+        }
+
+        if(keyState.tiltDown) {
+            camera.horizon -= 1.5
+        }
+
     }
 
     const updateStates = (camera: Camera, ds: DrawState) => {
@@ -229,18 +251,18 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 //Find the offset that we can use to fetch color and height data from
                 let mapOffset = ((colorMap.width * Math.floor(ry & (colorMap.height - 1))) + Math.floor(rx & (colorMap.width - 1))) * 4;
 
-                let heightOnScreen = Math.floor((camera.altitude - heightMapData[mapOffset]) / z * scalingFactor);
+                let projectedHeight = Math.floor((camera.altitude - heightMapData[mapOffset]) / z * scalingFactor + camera.horizon) ;
 
-                if (heightOnScreen < 0) {
-                    heightOnScreen = 0;
+                if (projectedHeight < 0) {
+                    projectedHeight = 0;
                 }
 
-                if (heightOnScreen > canvasHeight) {
-                    heightOnScreen = canvasHeight - 1;
+                if (projectedHeight > canvasHeight) {
+                    projectedHeight = canvasHeight - 1;
                 }
 
-                if (heightOnScreen < maxHeightOnScreen) {
-                    for (let y = heightOnScreen; y < maxHeightOnScreen; y++) {
+                if (projectedHeight < maxHeightOnScreen) {
+                    for (let y = projectedHeight; y < maxHeightOnScreen; y++) {
                         let index = ((canvasWidth * y) + i) * 4;
 
                         data[index] = colorMapData[mapOffset];
@@ -250,7 +272,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                         //Alpha
                         data[index + 3] = 255;
                     }
-                    maxHeightOnScreen = heightOnScreen;
+                    maxHeightOnScreen = projectedHeight;
                 }
 
             }

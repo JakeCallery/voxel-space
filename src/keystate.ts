@@ -7,5 +7,7 @@ export interface KeyState {
     elevationDown: boolean,
     rotateLeft: boolean,
     rotateRight: boolean,
+    tiltUp: boolean,
+    tiltDown: boolean,
 
 }
