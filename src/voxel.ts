@@ -5,7 +5,12 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     let imagesLoaded = 0;
     const colorMap = new Image();
+    colorMap.crossOrigin = "anonymous";
     const heightMap = new Image();
+    heightMap.crossOrigin = "anonymous";
+
+    let colorMapData: Uint8ClampedArray;
+    let heightMapData: Uint8ClampedArray;
 
     colorMap.src = './assets/colorMap.png';
     heightMap.src = './assets/heightMap.png';
@@ -34,10 +39,22 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     }
 
     colorMap.onload = (evt) => {
+        let canvas = document.createElement('canvas');
+        canvas.width = colorMap.naturalWidth;
+        canvas.height = colorMap.naturalHeight;
+        let context = canvas.getContext('2d');
+        context!.drawImage(colorMap, 0, 0);
+        colorMapData = context!.getImageData(0,0, canvas.width, canvas.height).data;
         init(evt);
     }
 
     heightMap.onload = (evt) => {
+        let canvas = document.createElement('canvas');
+        canvas.width = heightMap.naturalWidth;
+        canvas.height = heightMap.naturalHeight;
+        let context = canvas.getContext('2d');
+        context!.drawImage(heightMap, 0, 0);
+        heightMapData = context!.getImageData(0,0, canvas.width, canvas.height).data;
         init(evt);
     }
 
@@ -98,15 +115,38 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             let rx = camera.x;
             let ry = camera.y;
 
+            let maxHeightOnScreen = canvasHeight;
+
             for (let z = 1; z < camera.zFar; z++) {
                 rx += dx;
                 ry -= dy;
 
-                let index = (canvasWidth * Math.floor(ry/4) + Math.floor(rx/4)) * 4;
-                data[index] = 0;
-                data[index + 1] = gVal;
-                data[index + 2] = 0;
-                data[index + 3] = 255;
+                //Find the offset that we can use to fetch color and height data from
+                let mapOffset = ((colorMap.width * Math.floor(ry)) + Math.floor(rx)) * 4;
+
+                let heightOnScreen = heightMapData[mapOffset];
+                if(heightOnScreen < 0) {
+                    heightOnScreen = 0;
+                }
+
+                if(heightOnScreen > canvasHeight) {
+                    heightOnScreen = canvasHeight -1;
+                }
+
+                if(heightOnScreen < maxHeightOnScreen) {
+                    for(let y = heightOnScreen; y < maxHeightOnScreen; y++) {
+                        let index = ((canvasWidth * y) + i) * 4;
+
+                        data[index] = colorMapData[mapOffset];
+                        data[index + 1] = colorMapData[mapOffset + 1];
+                        data[index + 2] = colorMapData[mapOffset + 2];
+
+                        //Alpha
+                        data[index + 3] = 255;
+                    }
+                    maxHeightOnScreen = heightOnScreen;
+                }
+
             }
         }
 
