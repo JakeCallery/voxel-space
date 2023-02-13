@@ -195,7 +195,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 ry -= dy;
 
                 //Find the offset that we can use to fetch color and height data from
-                let mapOffset = ((colorMap.width * Math.floor(ry)) + Math.floor(rx)) * 4;
+                let mapOffset = ((colorMap.width * Math.floor(ry & (colorMap.height-1))) + Math.floor(rx & (colorMap.width-1))) * 4;
 
                 let heightOnScreen = Math.floor((camera.altitude - heightMapData[mapOffset]) / z * scalingFactor);
 
