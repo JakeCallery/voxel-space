@@ -1,5 +1,6 @@
 import {Camera} from "./camera";
 import {DrawState} from "./drawstate";
+import {KeyState} from "./keystate";
 
 export function setupCanvas(canvas: HTMLCanvasElement) {
 
@@ -31,7 +32,14 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         pry: 0
     }
 
-    let isRunning = false;
+    const keyState = <KeyState> {
+        arrowUp: false,
+        arrowDown: false,
+        arrowLeft: false,
+        arrowRight: false
+    }
+
+    let isRunning = true;
 
     const camera = <Camera>{
         x: 500,
@@ -63,6 +71,40 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const start = () => {
         console.log("Start");
 
+        //Register keyboard events
+        window.addEventListener("keydown", (event) => {
+            console.log("Key: ", event.key);
+            switch (event.key) {
+               case "ArrowUp":
+                    keyState.arrowUp = true;
+                    break;
+                case "ArrowDown":
+                    keyState.arrowDown = true;
+                    break;
+                case "ArrowLeft":
+                    keyState.arrowLeft = true;
+                    break;
+                case "ArrowRight":
+                    keyState.arrowRight = true;
+            }
+        });
+
+        window.addEventListener("keyup", (event) => {
+          switch (event.key) {
+              case "ArrowUp":
+                  keyState.arrowUp = false;
+                  break;
+              case "ArrowDown":
+                  keyState.arrowDown = false;
+                  break;
+              case "ArrowLeft":
+                  keyState.arrowLeft = false;
+                  break;
+              case "ArrowRight":
+                  keyState.arrowRight = false;
+          }
+        });
+
         //Start the game loop
         step()
 
@@ -70,12 +112,10 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     const step = () => {
 
-        console.log("Step");
         processInputs();
         updateStates(camera, drawState);
         drawScreen(camera, drawState);
 
-        isRunning = false;
         if (isRunning) {
             window.requestAnimationFrame(step)
         }
@@ -83,6 +123,21 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     const processInputs = () => {
 
+        if(keyState.arrowUp) {
+            camera.y--;
+        }
+
+        if(keyState.arrowDown) {
+            camera.y++;
+        }
+
+        if(keyState.arrowLeft) {
+            camera.x--
+        }
+
+        if(keyState.arrowRight) {
+            camera.x++;
+        }
 
     }
 
