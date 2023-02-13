@@ -3,6 +3,8 @@ import {DrawState} from "./drawstate";
 
 export function setupCanvas(canvas: HTMLCanvasElement) {
 
+    const scalingFactor = 100;
+
     let imagesLoaded = 0;
     const colorMap = new Image();
     colorMap.crossOrigin = "anonymous";
@@ -30,11 +32,11 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     }
 
     let isRunning = false;
-    let gVal = 0;
 
     const camera = <Camera>{
-        x: 512,
+        x: 500,
         y: 512,
+        altitude: 150,
         zFar: 400
     }
 
@@ -69,7 +71,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const step = () => {
 
         console.log("Step");
-        updateInputs();
+        processInputs();
         updateStates(camera, drawState);
         drawScreen(camera, drawState);
 
@@ -79,14 +81,12 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         }
     }
 
-    const updateInputs = () => {
+    const processInputs = () => {
+
 
     }
 
     const updateStates = (camera: Camera, ds: DrawState) => {
-        // gVal = (gVal + 1) % 255
-        gVal = 255;
-
         //Draw State update
         ds.plx = -camera.zFar;
         ds.ply = camera.zFar;
@@ -96,12 +96,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     }
 
     const drawScreen = (camera: Camera, ds: DrawState) => {
-        // for(let i = 0; i < data.length; i+=4) {
-        //     data[i] = 0;
-        //     data[i+1] = gVal;
-        //     data[i+2] = 0;
-        //     data[i+3] = 255;
-        // }
 
         let xSegment = (ds.prx - ds.plx) / canvasWidth;
         let ySegment = (ds.pry - ds.ply) / canvasWidth;
@@ -124,7 +118,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 //Find the offset that we can use to fetch color and height data from
                 let mapOffset = ((colorMap.width * Math.floor(ry)) + Math.floor(rx)) * 4;
 
-                let heightOnScreen = heightMapData[mapOffset];
+                let heightOnScreen = Math.floor((camera.altitude - heightMapData[mapOffset]) / z * scalingFactor);
+
                 if(heightOnScreen < 0) {
                     heightOnScreen = 0;
                 }
