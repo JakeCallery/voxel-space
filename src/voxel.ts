@@ -50,7 +50,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         y: 512,
         altitude: 150,
         zFar: 359,
-        angle: 0
+        angle: 1.5 * Math.PI
     }
 
     colorMap.onload = (evt) => {
@@ -164,13 +164,15 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.y += Math.sin(camera.angle);
         }
 
-        // if (keyState.arrowLeft) {
-        //     camera.x--;
-        // }
-        //
-        // if (keyState.arrowRight) {
-        //     camera.x++;
-        // }
+        if (keyState.arrowLeft) {
+            camera.x += Math.cos(camera.angle - (Math.PI/2));
+            camera.y -= Math.sin(camera.angle - (Math.PI/2));
+        }
+
+        if (keyState.arrowRight) {
+            camera.x -= Math.cos(camera.angle - (Math.PI/2));
+            camera.y += Math.sin(camera.angle - (Math.PI/2));
+        }
 
         if (keyState.elevationUp) {
             camera.altitude++;
