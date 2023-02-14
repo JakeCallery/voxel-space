@@ -19,6 +19,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const MAX_ANGLE_SPEED = 0.02;
     const ALTITUDE_RATE = 0.2;
     const MAX_ALTITUDE_SPEED = 5;
+    const HALF_PI = Math.PI/2;
 
     let imagesLoaded = 0;
     const colorMap = new Image();
@@ -240,6 +241,9 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     const updateStates = (camera: Camera, ds: DrawState) => {
 
+        let sinAngle = Math.sin(camera.angle);
+        let cosAngle = Math.cos(camera.angle);
+
         //Handle Foward/Back Speed
         if(camera.fbSpeed < camera.targetFBSpeed) {
             camera.fbSpeed += SPEED_RATE;
@@ -249,8 +253,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.fbSpeed -= SPEED_RATE;
             if(camera.fbSpeed < camera.targetFBSpeed) camera.fbSpeed = camera.targetFBSpeed;
         }
-        camera.x += (Math.cos(camera.angle) * camera.fbSpeed);
-        camera.y += -(Math.sin(camera.angle) * camera.fbSpeed);
+        camera.x += (cosAngle * camera.fbSpeed);
+        camera.y += -(sinAngle * camera.fbSpeed);
 
         //Handle Forward/Backward tilt (horizon)
         if(camera.horizon < camera.targetHorizon) {
@@ -271,8 +275,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.lrSpeed += SPEED_RATE;
             if(camera.lrSpeed > camera.targetLRSpeed) camera.lrSpeed = camera.targetLRSpeed;
         }
-        camera.x += (Math.cos(camera.angle - (Math.PI/2)) * camera.lrSpeed);
-        camera.y += -(Math.sin(camera.angle - (Math.PI/2)) * camera.lrSpeed);
+        camera.x += (Math.cos(camera.angle - HALF_PI) * camera.lrSpeed);
+        camera.y += -(Math.sin(camera.angle - HALF_PI) * camera.lrSpeed);
 
         //Handle Roll
         if(camera.rollFactor < camera.targetRollFactor) {
@@ -307,9 +311,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         camera.altitude += camera.altitudeSpeed;
 
         //Draw State update
-        let sinAngle = Math.sin(camera.angle);
-        let cosAngle = Math.cos(camera.angle);
-
         ds.plx = cosAngle * camera.zFar + sinAngle * camera.zFar;
         ds.ply = sinAngle * camera.zFar - cosAngle * camera.zFar;
 
