@@ -34,8 +34,10 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
-    const ctx = canvas.getContext("2d")!;
+    console.log("CanvasWidth: ", canvasWidth);
+    console.log("CanvasHeight", canvasHeight);
 
+    const ctx = canvas.getContext("2d")!;
     const imageData = ctx!.getImageData(0, 0, canvasWidth, canvasHeight);
     const data = imageData.data;
 
