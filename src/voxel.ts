@@ -15,6 +15,10 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const ROLL_RATE = 0.1;
     const SPEED_RATE = 0.1;
     const MAX_SPEED = 5;
+    const ANGLE_RATE = 0.001;
+    const MAX_ANGLE_SPEED = 0.02;
+    const ALTITUDE_RATE = 0.1;
+    const MAX_ALTITUDE_SPEED = 3;
 
     let imagesLoaded = 0;
     const colorMap = new Image();
@@ -59,8 +63,12 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         x: 500,
         y: 512,
         altitude: 150,
+        altitudeSpeed: 0,
+        targetAltitudeSpeed: 0,
         zFar: 400,
         angle: 1.5 * Math.PI,
+        angleSpeed: 0,
+        targetAngleSpeed: 0,
         horizon: 50,
         targetHorizon: 50,
         rollFactor: 0,
@@ -122,13 +130,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 case "d":
                     keyState.rotateRight = true;
                     break;
-                case "r":
-                    keyState.tiltDown = true;
-                    break;
-                case "f":
-                    keyState.tiltUp = true;
-                    break;
-
             }
         });
 
@@ -157,12 +158,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                     break;
                 case "d":
                     keyState.rotateRight = false;
-                    break;
-                case "r":
-                    keyState.tiltDown = false;
-                    break;
-                case "f":
-                    keyState.tiltUp = false;
                     break;
             }
         });
@@ -217,27 +212,26 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.targetRollFactor = 0;
         }
 
-
         if (keyState.elevationUp) {
-            camera.altitude++;
+            camera.targetAltitudeSpeed += MAX_ALTITUDE_SPEED;
         }
 
         if (keyState.elevationDown) {
-            camera.altitude--;
+            camera.targetAltitudeSpeed -= MAX_ALTITUDE_SPEED;
         }
+        if(!keyState.elevationUp && !keyState.elevationDown) {
+            camera.targetAltitudeSpeed = 0;
+        }
+
         if (keyState.rotateLeft) {
-            camera.angle -= 0.01;
+            camera.targetAngleSpeed = -MAX_ANGLE_SPEED;
         }
         if (keyState.rotateRight) {
-            camera.angle += 0.01;
+            camera.targetAngleSpeed = MAX_ANGLE_SPEED;
         }
 
-        if(keyState.tiltUp) {
-            camera.horizon += 1.5;
-        }
-
-        if(keyState.tiltDown) {
-            camera.horizon -= 1.5
+        if(!keyState.rotateLeft && !keyState.rotateRight) {
+            camera.targetAngleSpeed = 0;
         }
 
     }
@@ -275,26 +269,45 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.lrSpeed += SPEED_RATE;
             if(camera.lrSpeed > camera.targetLRSpeed) camera.lrSpeed = camera.targetLRSpeed;
         }
-
         camera.x += (Math.cos(camera.angle - (Math.PI/2)) * camera.lrSpeed);
         camera.y += -(Math.sin(camera.angle - (Math.PI/2)) * camera.lrSpeed);
-
-        let sinAngle = Math.sin(camera.angle);
-        let cosAngle = Math.cos(camera.angle);
-
 
         //Handle Roll
         if(camera.rollFactor < camera.targetRollFactor) {
             camera.rollFactor += ROLL_RATE;
             if(camera.rollFactor > camera.targetRollFactor) camera.rollFactor = camera.targetRollFactor;
         }
-
         if(camera.rollFactor > camera.targetRollFactor) {
             camera.rollFactor -= ROLL_RATE;
             if(camera.rollFactor < camera.targetRollFactor) camera.rollFactor = camera.targetRollFactor;
         }
 
+        //Handle Angle/Spin
+        if(camera.angleSpeed > camera.targetAngleSpeed) {
+            camera.angleSpeed -= ANGLE_RATE;
+            if(camera.angleSpeed < camera.targetAngleSpeed) camera.angleSpeed = camera.targetAngleSpeed;
+        }
+        if(camera.angleSpeed < camera.targetAngleSpeed) {
+            camera.angleSpeed += ANGLE_RATE;
+            if(camera.angleSpeed > camera.targetAngleSpeed) camera.angleSpeed = camera.targetAngleSpeed;
+        }
+        camera.angle += camera.angleSpeed;
+
+        //Handle Altitude
+        if(camera.altitudeSpeed > camera.targetAltitudeSpeed) {
+            camera.altitudeSpeed -= ALTITUDE_RATE;
+            if(camera.altitudeSpeed < camera.targetAltitudeSpeed) camera.altitudeSpeed = camera.targetAltitudeSpeed;
+        }
+        if(camera.altitudeSpeed < camera.targetAltitudeSpeed) {
+            camera.altitudeSpeed += ALTITUDE_RATE;
+            if(camera.altitudeSpeed > camera.targetAltitudeSpeed) camera.altitudeSpeed = camera.targetAltitudeSpeed;
+        }
+        camera.altitude += camera.altitudeSpeed;
+
         //Draw State update
+        let sinAngle = Math.sin(camera.angle);
+        let cosAngle = Math.cos(camera.angle);
+
         ds.plx = cosAngle * camera.zFar + sinAngle * camera.zFar;
         ds.ply = sinAngle * camera.zFar - cosAngle * camera.zFar;
 
