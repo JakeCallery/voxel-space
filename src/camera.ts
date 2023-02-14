@@ -5,4 +5,5 @@ export interface Camera  {
     zFar: number,
     angle: number, //Radians, clockwise
     horizon: number, //offset to pitch up and down
+    rollFactor: number,
 }

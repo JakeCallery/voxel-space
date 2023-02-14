@@ -51,7 +51,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         altitude: 150,
         zFar: 400,
         angle: 1.5 * Math.PI,
-        horizon: 50
+        horizon: 50,
+        rollFactor: 0,
     }
 
     colorMap.onload = (evt) => {
@@ -262,7 +263,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 }
 
                 if (projectedHeight < maxHeightOnScreen) {
-                    for (let y = projectedHeight; y < maxHeightOnScreen; y++) {
+                    let lean = Math.floor((camera.rollFactor *(i / canvasWidth - 0.5) + 0.5) * canvasHeight / 6);
+                    for (let y = (projectedHeight + lean); y < (maxHeightOnScreen + lean); y++) {
                         let index = ((canvasWidth * y) + i) * 4;
 
                         data[index] = colorMapData[mapOffset];
