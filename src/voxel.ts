@@ -49,9 +49,9 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         x: 500,
         y: 512,
         altitude: 150,
-        zFar: 359,
+        zFar: 400,
         angle: 1.5 * Math.PI,
-        horizon: 100
+        horizon: 50
     }
 
     colorMap.onload = (evt) => {
