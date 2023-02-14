@@ -12,7 +12,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const HORIZON_MAX = 70;
     const MAX_ROLL_FACTOR = 0.5;
     const PITCH_RATE = 2;
-    const ROLL_RATE = 0.2;
+    const ROLL_RATE = 0.1;
     const SPEED_RATE = 0.1;
     const MAX_SPEED = 5;
 
@@ -62,10 +62,14 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         zFar: 400,
         angle: 1.5 * Math.PI,
         horizon: 50,
+        targetHorizon: 50,
         rollFactor: 0,
         fbSpeed: 0,
+        targetFBSpeed: 0,
         lrSpeed: 0,
+        targetLRSpeed: 0,
         isMovingForward: true,
+        isMovingLeft: true,
     }
 
     colorMap.onload = (evt) => {
@@ -182,96 +186,35 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const processInputs = () => {
 
         if (keyState.arrowUp) {
-            camera.isMovingForward = true;
-            camera.fbSpeed += SPEED_RATE;
-            if(camera.fbSpeed > MAX_SPEED) {
-                camera.fbSpeed = MAX_SPEED;
-            }
-            camera.x += (Math.cos(camera.angle) * camera.fbSpeed);
-            camera.y -= (Math.sin(camera.angle) * camera.fbSpeed);
+            camera.targetFBSpeed = MAX_SPEED;
 
-            camera.horizon -= PITCH_RATE;
-            if(camera.horizon < HORIZON_MIN) {
-                camera.horizon = HORIZON_MIN;
-            }
+            camera.targetHorizon = HORIZON_MIN;
         }
 
         if (keyState.arrowDown) {
-            camera.isMovingForward = false;
-            camera.fbSpeed += SPEED_RATE;
-            if(camera.fbSpeed > MAX_SPEED) {
-                camera.fbSpeed = MAX_SPEED;
-            }
-
-            camera.x -= (Math.cos(camera.angle) * camera.fbSpeed);
-            camera.y += (Math.sin(camera.angle) * camera.fbSpeed);
-
-            camera.horizon += PITCH_RATE;
-            if(camera.horizon > HORIZON_MAX) {
-                camera.horizon = HORIZON_MAX;
-            }
+            camera.targetFBSpeed = -MAX_SPEED;
+            camera.targetHorizon = HORIZON_MAX;
 
         }
 
         if(!keyState.arrowUp && !keyState.arrowDown) {
-            camera.fbSpeed -= SPEED_RATE;
-            if(camera.fbSpeed < 0) camera.fbSpeed = 0;
-
-            if(!camera.isMovingForward) {
-                camera.x -= (Math.cos(camera.angle) * camera.fbSpeed);
-                camera.y += (Math.sin(camera.angle) * camera.fbSpeed);
-            }
-
-            if(camera.isMovingForward) {
-                camera.x += (Math.cos(camera.angle) * camera.fbSpeed);
-                camera.y -= (Math.sin(camera.angle) * camera.fbSpeed);
-            }
-
-            if(camera.horizon > HORIZON_DEFAULT) {
-                camera.horizon -= PITCH_RATE;
-            }
-
-            if(camera.horizon < HORIZON_DEFAULT) {
-                camera.horizon += PITCH_RATE;
-            }
-
+            camera.targetFBSpeed = 0;
+            camera.targetHorizon = HORIZON_DEFAULT;
         }
 
         if (keyState.arrowLeft) {
-            camera.x += Math.cos(camera.angle - (Math.PI/2));
-            camera.y -= Math.sin(camera.angle - (Math.PI/2));
-
-            camera.rollFactor += ROLL_RATE;
-            if(camera.rollFactor > MAX_ROLL_FACTOR) {
-                camera.rollFactor = MAX_ROLL_FACTOR;
-            }
+            camera.targetLRSpeed = MAX_SPEED;
+            camera.targetRollFactor = MAX_ROLL_FACTOR;
         }
 
         if (keyState.arrowRight) {
-            camera.x -= Math.cos(camera.angle - (Math.PI/2));
-            camera.y += Math.sin(camera.angle - (Math.PI/2));
-
-            camera.rollFactor -= ROLL_RATE;
-            if(camera.rollFactor < -MAX_ROLL_FACTOR) {
-                camera.rollFactor = -MAX_ROLL_FACTOR;
-            }
+            camera.targetLRSpeed = -MAX_SPEED;
+            camera.targetRollFactor = -MAX_ROLL_FACTOR;
         }
 
         if(!keyState.arrowLeft && !keyState.arrowRight) {
-            if(camera.rollFactor > 0) {
-                camera.rollFactor -= ROLL_RATE;
-
-                if(camera.rollFactor < 0) {
-                    camera.rollFactor = 0;
-                }
-            }
-
-            if(camera.rollFactor < 0) {
-                camera.rollFactor += ROLL_RATE;
-                if(camera.rollFactor > 0) {
-                    camera.rollFactor = 0;
-                }
-            }
+            camera.targetLRSpeed = 0;
+            camera.targetRollFactor = 0;
         }
 
 
@@ -301,8 +244,55 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
 
     const updateStates = (camera: Camera, ds: DrawState) => {
 
+        //Handle Foward/Back Speed
+        if(camera.fbSpeed < camera.targetFBSpeed) {
+            camera.fbSpeed += SPEED_RATE;
+            if(camera.fbSpeed > camera.targetFBSpeed) camera.fbSpeed = camera.targetFBSpeed;
+        }
+        if(camera.fbSpeed > camera.targetFBSpeed) {
+            camera.fbSpeed -= SPEED_RATE;
+            if(camera.fbSpeed < camera.targetFBSpeed) camera.fbSpeed = camera.targetFBSpeed;
+        }
+        camera.x += (Math.cos(camera.angle) * camera.fbSpeed);
+        camera.y += -(Math.sin(camera.angle) * camera.fbSpeed);
+
+        //Handle Forward/Backward tilt (horizon)
+        if(camera.horizon < camera.targetHorizon) {
+            camera.horizon += PITCH_RATE;
+            if(camera.horizon > camera.targetHorizon) camera.horizon = camera.targetHorizon;
+        }
+        if(camera.horizon > camera.targetHorizon) {
+            camera.horizon -= PITCH_RATE;
+            if(camera.horizon < camera.targetHorizon) camera.horizon = camera.targetHorizon;
+        }
+
+        //Handle Left/Right Speed
+        if(camera.lrSpeed > camera.targetLRSpeed) {
+            camera.lrSpeed -= SPEED_RATE;
+            if(camera.lrSpeed < camera.targetLRSpeed) camera.lrSpeed = camera.targetLRSpeed;
+        }
+        if(camera.lrSpeed < camera.targetLRSpeed) {
+            camera.lrSpeed += SPEED_RATE;
+            if(camera.lrSpeed > camera.targetLRSpeed) camera.lrSpeed = camera.targetLRSpeed;
+        }
+
+        camera.x += (Math.cos(camera.angle - (Math.PI/2)) * camera.lrSpeed);
+        camera.y += -(Math.sin(camera.angle - (Math.PI/2)) * camera.lrSpeed);
+
         let sinAngle = Math.sin(camera.angle);
         let cosAngle = Math.cos(camera.angle);
+
+
+        //Handle Roll
+        if(camera.rollFactor < camera.targetRollFactor) {
+            camera.rollFactor += ROLL_RATE;
+            if(camera.rollFactor > camera.targetRollFactor) camera.rollFactor = camera.targetRollFactor;
+        }
+
+        if(camera.rollFactor > camera.targetRollFactor) {
+            camera.rollFactor -= ROLL_RATE;
+            if(camera.rollFactor < camera.targetRollFactor) camera.rollFactor = camera.targetRollFactor;
+        }
 
         //Draw State update
         ds.plx = cosAngle * camera.zFar + sinAngle * camera.zFar;
