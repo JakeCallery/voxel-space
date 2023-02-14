@@ -9,4 +9,5 @@ export interface Camera  {
     fbSpeed: number,
 
     lrSpeed: number,
+    isMovingForward: boolean,
 }

@@ -13,8 +13,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const MAX_ROLL_FACTOR = 0.5;
     const PITCH_RATE = 2;
     const ROLL_RATE = 0.2;
-    const SPEED_RATE = 1.1;
-    const MAX_SPEED = 3;
+    const SPEED_RATE = 0.1;
+    const MAX_SPEED = 5;
 
     let imagesLoaded = 0;
     const colorMap = new Image();
@@ -65,6 +65,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         rollFactor: 0,
         fbSpeed: 0,
         lrSpeed: 0,
+        isMovingForward: true,
     }
 
     colorMap.onload = (evt) => {
@@ -181,8 +182,13 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const processInputs = () => {
 
         if (keyState.arrowUp) {
-            camera.x += Math.cos(camera.angle);
-            camera.y -= Math.sin(camera.angle);
+            camera.isMovingForward = true;
+            camera.fbSpeed += SPEED_RATE;
+            if(camera.fbSpeed > MAX_SPEED) {
+                camera.fbSpeed = MAX_SPEED;
+            }
+            camera.x += (Math.cos(camera.angle) * camera.fbSpeed);
+            camera.y -= (Math.sin(camera.angle) * camera.fbSpeed);
 
             camera.horizon -= PITCH_RATE;
             if(camera.horizon < HORIZON_MIN) {
@@ -191,8 +197,14 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         }
 
         if (keyState.arrowDown) {
-            camera.x -= Math.cos(camera.angle);
-            camera.y += Math.sin(camera.angle);
+            camera.isMovingForward = false;
+            camera.fbSpeed += SPEED_RATE;
+            if(camera.fbSpeed > MAX_SPEED) {
+                camera.fbSpeed = MAX_SPEED;
+            }
+
+            camera.x -= (Math.cos(camera.angle) * camera.fbSpeed);
+            camera.y += (Math.sin(camera.angle) * camera.fbSpeed);
 
             camera.horizon += PITCH_RATE;
             if(camera.horizon > HORIZON_MAX) {
@@ -202,6 +214,19 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         }
 
         if(!keyState.arrowUp && !keyState.arrowDown) {
+            camera.fbSpeed -= SPEED_RATE;
+            if(camera.fbSpeed < 0) camera.fbSpeed = 0;
+
+            if(!camera.isMovingForward) {
+                camera.x -= (Math.cos(camera.angle) * camera.fbSpeed);
+                camera.y += (Math.sin(camera.angle) * camera.fbSpeed);
+            }
+
+            if(camera.isMovingForward) {
+                camera.x += (Math.cos(camera.angle) * camera.fbSpeed);
+                camera.y -= (Math.sin(camera.angle) * camera.fbSpeed);
+            }
+
             if(camera.horizon > HORIZON_DEFAULT) {
                 camera.horizon -= PITCH_RATE;
             }
