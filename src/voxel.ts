@@ -17,8 +17,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const MAX_SPEED = 5;
     const ANGLE_RATE = 0.001;
     const MAX_ANGLE_SPEED = 0.02;
-    const ALTITUDE_RATE = 0.1;
-    const MAX_ALTITUDE_SPEED = 3;
+    const ALTITUDE_RATE = 0.2;
+    const MAX_ALTITUDE_SPEED = 5;
 
     let imagesLoaded = 0;
     const colorMap = new Image();
@@ -213,11 +213,11 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         }
 
         if (keyState.elevationUp) {
-            camera.targetAltitudeSpeed += MAX_ALTITUDE_SPEED;
+            camera.targetAltitudeSpeed = MAX_ALTITUDE_SPEED;
         }
 
         if (keyState.elevationDown) {
-            camera.targetAltitudeSpeed -= MAX_ALTITUDE_SPEED;
+            camera.targetAltitudeSpeed = -MAX_ALTITUDE_SPEED;
         }
         if(!keyState.elevationUp && !keyState.elevationDown) {
             camera.targetAltitudeSpeed = 0;
