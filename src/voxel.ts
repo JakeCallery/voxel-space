@@ -8,8 +8,13 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const SKEW_FACTOR = 6;
     const BYTES_PER_PIXEL = 4;
     const HORIZON_DEFAULT = 50;
-    const HORIZON_MIN = -15;
-    const HORIZZON_MAX = 120;
+    const HORIZON_MIN = 30;
+    const HORIZON_MAX = 70;
+    const MAX_ROLL_FACTOR = 0.5;
+    const PITCH_RATE = 2;
+    const ROLL_RATE = 0.2;
+    const SPEED_RATE = 1.1;
+    const MAX_SPEED = 3;
 
     let imagesLoaded = 0;
     const colorMap = new Image();
@@ -58,6 +63,8 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         angle: 1.5 * Math.PI,
         horizon: 50,
         rollFactor: 0,
+        fbSpeed: 0,
+        lrSpeed: 0,
     }
 
     colorMap.onload = (evt) => {
@@ -174,11 +181,10 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const processInputs = () => {
 
         if (keyState.arrowUp) {
-            console.log(camera.angle);
             camera.x += Math.cos(camera.angle);
             camera.y -= Math.sin(camera.angle);
 
-            camera.horizon -= 1;
+            camera.horizon -= PITCH_RATE;
             if(camera.horizon < HORIZON_MIN) {
                 camera.horizon = HORIZON_MIN;
             }
@@ -188,15 +194,20 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.x -= Math.cos(camera.angle);
             camera.y += Math.sin(camera.angle);
 
+            camera.horizon += PITCH_RATE;
+            if(camera.horizon > HORIZON_MAX) {
+                camera.horizon = HORIZON_MAX;
+            }
+
         }
 
         if(!keyState.arrowUp && !keyState.arrowDown) {
             if(camera.horizon > HORIZON_DEFAULT) {
-                camera.horizon -= 1;
+                camera.horizon -= PITCH_RATE;
             }
 
             if(camera.horizon < HORIZON_DEFAULT) {
-                camera.horizon += 1;
+                camera.horizon += PITCH_RATE;
             }
 
         }
@@ -204,12 +215,40 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         if (keyState.arrowLeft) {
             camera.x += Math.cos(camera.angle - (Math.PI/2));
             camera.y -= Math.sin(camera.angle - (Math.PI/2));
+
+            camera.rollFactor += ROLL_RATE;
+            if(camera.rollFactor > MAX_ROLL_FACTOR) {
+                camera.rollFactor = MAX_ROLL_FACTOR;
+            }
         }
 
         if (keyState.arrowRight) {
             camera.x -= Math.cos(camera.angle - (Math.PI/2));
             camera.y += Math.sin(camera.angle - (Math.PI/2));
+
+            camera.rollFactor -= ROLL_RATE;
+            if(camera.rollFactor < -MAX_ROLL_FACTOR) {
+                camera.rollFactor = -MAX_ROLL_FACTOR;
+            }
         }
+
+        if(!keyState.arrowLeft && !keyState.arrowRight) {
+            if(camera.rollFactor > 0) {
+                camera.rollFactor -= ROLL_RATE;
+
+                if(camera.rollFactor < 0) {
+                    camera.rollFactor = 0;
+                }
+            }
+
+            if(camera.rollFactor < 0) {
+                camera.rollFactor += ROLL_RATE;
+                if(camera.rollFactor > 0) {
+                    camera.rollFactor = 0;
+                }
+            }
+        }
+
 
         if (keyState.elevationUp) {
             camera.altitude++;
@@ -233,7 +272,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.horizon -= 1.5
         }
 
-        console.log("Horizon: ", camera.horizon);
     }
 
     const updateStates = (camera: Camera, ds: DrawState) => {
