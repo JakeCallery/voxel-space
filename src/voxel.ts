@@ -4,7 +4,12 @@ import {KeyState} from "./keystate";
 
 export function setupCanvas(canvas: HTMLCanvasElement) {
 
-    const scalingFactor = 100;
+    const SCALING_FACTOR = 100;
+    const SKEW_FACTOR = 6;
+    const BYTES_PER_PIXEL = 4;
+    const HORIZON_DEFAULT = 50;
+    const HORIZON_MIN = -15;
+    const HORIZZON_MAX = 120;
 
     let imagesLoaded = 0;
     const colorMap = new Image();
@@ -172,11 +177,28 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             console.log(camera.angle);
             camera.x += Math.cos(camera.angle);
             camera.y -= Math.sin(camera.angle);
+
+            camera.horizon -= 1;
+            if(camera.horizon < HORIZON_MIN) {
+                camera.horizon = HORIZON_MIN;
+            }
         }
 
         if (keyState.arrowDown) {
             camera.x -= Math.cos(camera.angle);
             camera.y += Math.sin(camera.angle);
+
+        }
+
+        if(!keyState.arrowUp && !keyState.arrowDown) {
+            if(camera.horizon > HORIZON_DEFAULT) {
+                camera.horizon -= 1;
+            }
+
+            if(camera.horizon < HORIZON_DEFAULT) {
+                camera.horizon += 1;
+            }
+
         }
 
         if (keyState.arrowLeft) {
@@ -211,6 +233,7 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
             camera.horizon -= 1.5
         }
 
+        console.log("Horizon: ", camera.horizon);
     }
 
     const updateStates = (camera: Camera, ds: DrawState) => {
@@ -250,9 +273,9 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 ry -= dy;
 
                 //Find the offset that we can use to fetch color and height data from
-                let mapOffset = ((colorMap.width * Math.floor(ry & (colorMap.height - 1))) + Math.floor(rx & (colorMap.width - 1))) * 4;
+                let mapOffset = ((colorMap.width * Math.floor(ry & (colorMap.height - 1))) + Math.floor(rx & (colorMap.width - 1))) * BYTES_PER_PIXEL;
 
-                let projectedHeight = Math.floor((camera.altitude - heightMapData[mapOffset]) / z * scalingFactor + camera.horizon) ;
+                let projectedHeight = Math.floor((camera.altitude - heightMapData[mapOffset]) / z * SCALING_FACTOR + camera.horizon) ;
 
                 if (projectedHeight < 0) {
                     projectedHeight = 0;
@@ -263,9 +286,9 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
                 }
 
                 if (projectedHeight < maxHeightOnScreen) {
-                    let lean = Math.floor((camera.rollFactor *(i / canvasWidth - 0.5) + 0.5) * canvasHeight / 6);
+                    let lean = Math.floor((camera.rollFactor *(i / canvasWidth - 0.5) + 0.5) * canvasHeight / SKEW_FACTOR);
                     for (let y = (projectedHeight + lean); y < (maxHeightOnScreen + lean); y++) {
-                        let index = ((canvasWidth * y) + i) * 4;
+                        let index = ((canvasWidth * y) + i) * BYTES_PER_PIXEL;
 
                         data[index] = colorMapData[mapOffset];
                         data[index + 1] = colorMapData[mapOffset + 1];
@@ -286,8 +309,11 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     }
 
     const clearImageData = (data: Uint8ClampedArray) => {
-        for (let i = 0; i < data.length; i++) {
-            data[i] = 0;
+        for (let i = 0; i < data.length; i+=BYTES_PER_PIXEL) {
+            data[i] = 4;
+            data[i+1] = 45;
+            data[i+2] = 101;
+            data[i+3] = 255;
         }
     }
 
